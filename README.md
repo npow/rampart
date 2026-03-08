@@ -1,6 +1,7 @@
 # Aegis
 
 [![CI](https://github.com/npow/aegis/actions/workflows/ci.yml/badge.svg)](https://github.com/npow/aegis/actions/workflows/ci.yml)
+[![Release](https://github.com/npow/aegis/actions/workflows/release.yml/badge.svg)](https://github.com/npow/aegis/actions/workflows/release.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -171,14 +172,12 @@ Budgets are hard runtime constraints checked before each node, not alerts you co
 ```python
 result = await research_pipeline.run(
     input=state,
-    config=RunConfig(
-        thread_id="session-xyz",
-        budget=Budget(
-            max_llm_cost_usd=0.50,
-            max_tool_calls=20,
-            max_wall_time_seconds=120,
-            on_exceeded=BudgetDecision.hard_stop(),
-        ),
+    config=RunConfig(thread_id="session-xyz"),
+    budget=Budget(
+        max_llm_cost_usd=0.50,
+        max_tool_calls=20,
+        max_wall_time_seconds=120,
+        on_exceeded="hard_stop",
     ),
 )
 # result.status == "budget_exceeded" — never silently exceeded
