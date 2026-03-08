@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write  # needed to create GitHub Releases
+  id-token: write  # needed for PyPI trusted publisher (OIDC)
 
 jobs:
   build:
@@ -49,8 +50,6 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     environment: pypi
-    # Only runs when PYPI_API_TOKEN secret is configured
-    if: vars.PYPI_PUBLISH == 'true'
     steps:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
@@ -59,5 +58,3 @@ jobs:
           path: dist/
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
