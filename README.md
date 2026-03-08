@@ -1,13 +1,13 @@
-# Aegis
+# Rampart
 
-[![CI](https://github.com/npow/aegis/actions/workflows/ci.yml/badge.svg)](https://github.com/npow/aegis/actions/workflows/ci.yml)
-[![Release](https://github.com/npow/aegis/actions/workflows/release.yml/badge.svg)](https://github.com/npow/aegis/actions/workflows/release.yml)
+[![CI](https://github.com/npow/rampart/actions/workflows/ci.yml/badge.svg)](https://github.com/npow/rampart/actions/workflows/ci.yml)
+[![Release](https://github.com/npow/rampart/actions/workflows/release.yml/badge.svg)](https://github.com/npow/rampart/actions/workflows/release.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 **A runtime that makes LLM agents production-safe by default.**
 
-> Built for teams who have gotten burned shipping LangGraph to production.
+> Built for teams who need more than a prototype framework when shipping agents to production.
 
 ---
 
@@ -20,21 +20,21 @@ Prototypes work in demos. Production is different.
 - A runaway loop burns $800 in API credits before anyone wakes up.
 - The Replit incident (July 2025) — an agent deleted 1,200+ production records despite an explicit code-and-action freeze — wasn't an edge case. It was the predictable result of a framework with no permission enforcement model.
 
-Every team shipping agents today independently assembles Temporal + LangGraph + Langfuse + `unittest.mock`, paying the integration tax on every project. Aegis ships all of it in the box.
+Every team shipping agents today independently assembles Temporal + LangGraph + Langfuse + `unittest.mock`, paying the integration tax on every project. Rampart ships all of it in the box.
 
 ---
 
 ## Quickstart
 
 ```bash
-pip install aegis
-pip install "aegis[sqlite]"   # SQLite checkpointing
+pip install rampart
+pip install "rampart[sqlite]"   # SQLite checkpointing
 ```
 
 ```python
 from dataclasses import dataclass, field
-from aegis import graph, node, tool, AgentState, RunConfig
-from aegis.checkpointers import SqliteCheckpointer
+from rampart import graph, node, tool, AgentState, RunConfig
+from rampart.checkpointers import SqliteCheckpointer
 
 @dataclass
 class ResearchState(AgentState):
@@ -87,7 +87,7 @@ result = await research_pipeline.resume(
 )
 ```
 
-LangGraph checkpoints within a process. Aegis checkpoints survive restarts.
+LangGraph checkpoints within a process. Rampart checkpoints survive restarts.
 
 ### Testing without live APIs
 
@@ -187,7 +187,7 @@ result = await research_pipeline.run(
 
 ## How it compares
 
-| | **Aegis** | **LangGraph** | **CrewAI** | **AutoGen** |
+| | **Rampart** | **LangGraph** | **CrewAI** | **AutoGen** |
 |---|---|---|---|---|
 | Crash recovery (survives restart) | ✅ | ⚠️ in-process only | ❌ | ❌ |
 | Testing without live APIs | ✅ built-in | ⚠️ roll your own | ⚠️ roll your own | ⚠️ roll your own |
@@ -197,14 +197,14 @@ result = await research_pipeline.run(
 | Budget hard limits | ✅ | ❌ | ❌ | ❌ |
 | Multi-agent composition | ✅ | ✅ | ✅ | ✅ |
 
-LangGraph is the closest comparison. Aegis has the same decorator ergonomics and adds durable multi-process recovery, built-in testing primitives, eval gates, and permission enforcement. CrewAI and AutoGen prioritize role-based multi-agent patterns and leave infrastructure concerns to you.
+LangGraph is the closest comparison. Rampart has the same decorator ergonomics and adds durable multi-process recovery, built-in testing primitives, eval gates, and permission enforcement. CrewAI and AutoGen prioritize role-based multi-agent patterns and leave infrastructure concerns to you.
 
 ---
 
 ## Multi-agent composition
 
 ```python
-from aegis import chain, parallel, supervisor
+from rampart import chain, parallel, supervisor
 
 # Sequential
 pipeline = chain(fetch_graph, analyze_graph, report_graph)
@@ -229,5 +229,5 @@ result = await pipeline.run(input=state, config=config)
 | Backend | Install | Use case |
 |---|---|---|
 | `MemoryCheckpointer` | built-in | Tests, local dev |
-| `SqliteCheckpointer` | `pip install "aegis[sqlite]"` | Single-process, local |
-| `PostgresCheckpointer` | `pip install "aegis[postgres]"` | Production, multi-process |
+| `SqliteCheckpointer` | `pip install "rampart[sqlite]"` | Single-process, local |
+| `PostgresCheckpointer` | `pip install "rampart[postgres]"` | Production, multi-process |

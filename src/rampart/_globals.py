@@ -1,4 +1,4 @@
-"""Global mutable defaults for Aegis configuration."""
+"""Global mutable defaults for Rampart configuration."""
 
 from __future__ import annotations
 

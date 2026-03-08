@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "aegis"
+name = "rampart"
 version = "0.2.0"
 description = "A runtime that makes LLM agents production-safe by default."
 readme = "README.md"
@@ -50,17 +50,17 @@ all = [
 ]
 
 [project.scripts]
-aegis = "aegis._cli:main"
+rampart = "rampart._cli:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/aegis"]
+packages = ["src/rampart"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 
 [tool.coverage.run]
-source = ["aegis"]
+source = ["rampart"]
 branch = true
 omit = ["*/tests/*", "*/_cli.py"]
 
@@ -88,7 +88,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["aegis"]
+known-first-party = ["rampart"]
 
 [tool.mypy]
 python_version = "3.10"
@@ -97,4 +97,4 @@ warn_return_any = true
 warn_unused_configs = true
 warn_unused_ignores = false
 ignore_missing_imports = true
-files = ["src/aegis"]
+files = ["src/rampart"]

@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 
 # ── Active run contextvar ─────────────────────────────────────────────────────
 
-_run_context: ContextVar[RunContext | None] = ContextVar("aegis_run_context", default=None)
+_run_context: ContextVar[RunContext | None] = ContextVar("rampart_run_context", default=None)
 
 
 # ── RunContext ────────────────────────────────────────────────────────────────
@@ -330,7 +330,7 @@ class RunContext:
     ) -> Any:
         import time as _time
 
-        from ._models import AegisCassetteStaleError
+        from ._models import RampartCassetteStaleError
 
         if self.cassette is None:  # pragma: no cover
             raise RuntimeError("_serve_tool_from_cassette called without active cassette")
@@ -340,7 +340,7 @@ class RunContext:
         while idx < len(entries) and entries[idx].type != "tool_call":
             idx += 1
         if idx >= len(entries):
-            raise AegisCassetteStaleError(
+            raise RampartCassetteStaleError(
                 f"Cassette exhausted: no more tool calls recorded "
                 f"(tool='{tool_name}', step={self._step_counter})"
             )
@@ -352,7 +352,7 @@ class RunContext:
         # Validate tool name match
         recorded_tool = entry.request.get("tool_name")
         if recorded_tool != tool_name:
-            raise AegisCassetteStaleError(
+            raise RampartCassetteStaleError(
                 f"Cassette divergence at index {idx}: "
                 f"expected tool '{recorded_tool}', got '{tool_name}'"
             )
@@ -432,7 +432,7 @@ class RunContext:
             import litellm  # type: ignore[import]
         except ImportError as exc:
             raise LLMNotConfiguredError(
-                "No LLM provider configured. Install aegis[litellm] and set your API key, "
+                "No LLM provider configured. Install rampart[litellm] and set your API key, "
                 "or use cassette replay / mock_tools() for testing."
             ) from exc
 
@@ -504,7 +504,7 @@ class RunContext:
     ) -> LLMResponse:
         import time as _time
 
-        from ._models import AegisCassetteStaleError
+        from ._models import RampartCassetteStaleError
 
         if self.cassette is None:  # pragma: no cover
             raise RuntimeError("_serve_llm_from_cassette called without active cassette")
@@ -513,7 +513,7 @@ class RunContext:
         while idx < len(entries) and entries[idx].type != "llm_call":
             idx += 1
         if idx >= len(entries):
-            raise AegisCassetteStaleError(
+            raise RampartCassetteStaleError(
                 f"Cassette exhausted: no more LLM calls recorded (node={node_name})"
             )
 
@@ -534,12 +534,12 @@ class RunContext:
         ).hexdigest()[:16]
 
         if current_hash != recorded_hash:
-            raise AegisCassetteStaleError(
+            raise RampartCassetteStaleError(
                 f"Cassette '{node_name}' is stale at index {idx} (llm_call):\n"
                 f"  prompt hash changed\n"
                 f"  Recorded:  sha256:{recorded_hash}\n"
                 f"  Current:   sha256:{current_hash}\n\n"
-                f"Re-record with: pytest --aegis-record"
+                f"Re-record with: pytest --rampart-record"
             )
 
         resp = entry.response

@@ -6,9 +6,9 @@ from pathlib import Path
 
 import pytest
 
-from aegis import AgentState, RunConfig, graph, node, tool
-from aegis.checkpointers import MemoryCheckpointer
-from aegis.eval import (
+from rampart import AgentState, RunConfig, graph, node, tool
+from rampart.checkpointers import MemoryCheckpointer
+from rampart.eval import (
     EvalCase,
     EvalGateFailure,
     EvalSuite,
@@ -16,7 +16,7 @@ from aegis.eval import (
     ToolCallAssertion,
     TraceSnapshotAssertion,
 )
-from aegis.testing import MockTool
+from rampart.testing import MockTool
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -60,8 +60,8 @@ async def eval_pipeline(state: EvalState) -> EvalState:
 def test_tool_call_assertion_passes_when_called():
     from datetime import datetime
 
-    from aegis._models import NodeTrace, RunTrace, ToolCall
-    from aegis.eval._assertions import evaluate_assertion
+    from rampart._models import NodeTrace, RunTrace, ToolCall
+    from rampart.eval._assertions import evaluate_assertion
 
     tool_call = ToolCall(
         call_id="c1",
@@ -106,8 +106,8 @@ def test_tool_call_assertion_passes_when_called():
 def test_tool_call_assertion_fails_when_not_called():
     from datetime import datetime
 
-    from aegis._models import RunTrace
-    from aegis.eval._assertions import evaluate_assertion
+    from rampart._models import RunTrace
+    from rampart.eval._assertions import evaluate_assertion
 
     trace = RunTrace(
         run_id="r1",
@@ -133,8 +133,8 @@ def test_tool_call_assertion_fails_when_not_called():
 def test_schema_assertion_passes():
     from datetime import datetime
 
-    from aegis._models import RunTrace
-    from aegis.eval._assertions import evaluate_assertion
+    from rampart._models import RunTrace
+    from rampart.eval._assertions import evaluate_assertion
 
     trace = RunTrace(
         run_id="r1",
@@ -157,8 +157,8 @@ def test_schema_assertion_passes():
 def test_schema_assertion_fails():
     from datetime import datetime
 
-    from aegis._models import RunTrace
-    from aegis.eval._assertions import evaluate_assertion
+    from rampart._models import RunTrace
+    from rampart.eval._assertions import evaluate_assertion
 
     trace = RunTrace(
         run_id="r1",
@@ -181,8 +181,8 @@ def test_schema_assertion_fails():
 def test_tool_call_assertion_max_times():
     from datetime import datetime
 
-    from aegis._models import NodeTrace, RunTrace, ToolCall
-    from aegis.eval._assertions import evaluate_assertion
+    from rampart._models import NodeTrace, RunTrace, ToolCall
+    from rampart.eval._assertions import evaluate_assertion
 
     def make_tc(i):
         return ToolCall(
@@ -237,7 +237,7 @@ async def test_eval_suite_passes_when_all_cases_pass():
         path = f"{tmpdir}/eval.json"
 
         # We'll use a mock-based cassette approach: record with mocks
-        from aegis.testing import cassette as _cassette
+        from rampart.testing import cassette as _cassette
 
         async with _cassette.record(path):
             async with eval_pipeline.mock_tools(
@@ -287,7 +287,7 @@ async def test_eval_suite_fails_gate_when_case_fails():
     with tempfile.TemporaryDirectory() as tmpdir:
         path = f"{tmpdir}/eval_fail.json"
 
-        from aegis.testing import cassette as _cassette
+        from rampart.testing import cassette as _cassette
 
         async with _cassette.record(path):
             async with eval_pipeline.mock_tools(
@@ -333,7 +333,7 @@ async def test_eval_suite_summary_contains_case_results():
     with tempfile.TemporaryDirectory() as tmpdir:
         path = f"{tmpdir}/summary.json"
 
-        from aegis.testing import cassette as _cassette
+        from rampart.testing import cassette as _cassette
 
         async with _cassette.record(path):
             async with eval_pipeline.mock_tools(
@@ -372,8 +372,8 @@ async def test_trace_snapshot_assertion_creates_golden_on_first_run():
     with tempfile.TemporaryDirectory() as tmpdir:
         from datetime import datetime
 
-        from aegis._models import NodeTrace, RunTrace, ToolCall
-        from aegis.eval._assertions import evaluate_assertion
+        from rampart._models import NodeTrace, RunTrace, ToolCall
+        from rampart.eval._assertions import evaluate_assertion
 
         golden_path = f"{tmpdir}/golden.json"
 

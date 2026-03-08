@@ -1,4 +1,4 @@
-"""Assertion types for the Aegis eval pipeline."""
+"""Assertion types for the Rampart eval pipeline."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""MockTool — first-class tool mocking for Aegis tests."""
+"""MockTool — first-class tool mocking for Rampart tests."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ class _TestingState:
 
 
 _mock_testing_context: ContextVar[_TestingState | None] = ContextVar(
-    "aegis_testing_context", default=None
+    "rampart_testing_context", default=None
 )
 
 

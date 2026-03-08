@@ -3,8 +3,8 @@
 import tempfile
 from datetime import datetime
 
-from aegis import Checkpoint
-from aegis.checkpointers import MemoryCheckpointer, SqliteCheckpointer
+from rampart import Checkpoint
+from rampart.checkpointers import MemoryCheckpointer, SqliteCheckpointer
 
 
 def _make_ckpt(step: int, thread_id: str = "t1", graph_name: str = "g") -> Checkpoint:
@@ -170,7 +170,7 @@ def test_postgres_checkpointer_rejects_invalid_table_name():
     """PostgresCheckpointer must reject table names with SQL injection characters."""
     import pytest
 
-    from aegis._config import PostgresCheckpointer
+    from rampart._config import PostgresCheckpointer
 
     with pytest.raises(ValueError, match="invalid"):
         PostgresCheckpointer("postgres://localhost/db", table_name="bad; DROP TABLE foo")
@@ -184,11 +184,11 @@ def test_postgres_checkpointer_rejects_invalid_table_name():
 
 def test_postgres_checkpointer_accepts_valid_table_name():
     """PostgresCheckpointer should accept valid SQL identifiers."""
-    from aegis._config import PostgresCheckpointer
+    from rampart._config import PostgresCheckpointer
 
     # Should not raise
-    cp = PostgresCheckpointer("postgres://localhost/db", table_name="aegis_checkpoints")
-    assert cp.table_name == "aegis_checkpoints"
+    cp = PostgresCheckpointer("postgres://localhost/db", table_name="rampart_checkpoints")
+    assert cp.table_name == "rampart_checkpoints"
 
     cp2 = PostgresCheckpointer("postgres://localhost/db", table_name="_private_table")
     assert cp2.table_name == "_private_table"

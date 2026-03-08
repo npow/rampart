@@ -1,8 +1,8 @@
-"""Shared fixtures for Aegis tests."""
+"""Shared fixtures for Rampart tests."""
 
 import pytest
 
-from aegis.checkpointers import MemoryCheckpointer
+from rampart.checkpointers import MemoryCheckpointer
 
 
 @pytest.fixture

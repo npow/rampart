@@ -1,4 +1,4 @@
-"""CLI for Aegis — aegis run, resume, history, eval, trace, permissions."""
+"""CLI for Rampart — rampart run, resume, history, eval, trace, permissions."""
 
 from __future__ import annotations
 
@@ -10,15 +10,15 @@ import click
 
 
 @click.group()
-@click.version_option(package_name="aegis")
+@click.version_option(package_name="rampart")
 def main() -> None:
-    """Aegis — production-safe LLM agent runtime."""
+    """Rampart — production-safe LLM agent runtime."""
 
 
 @main.command()
 @click.argument("project_name")
 def init(project_name: str) -> None:
-    """Initialize a new Aegis project."""
+    """Initialize a new Rampart project."""
 
     root = Path(project_name)
     if root.exists():
@@ -31,15 +31,15 @@ def init(project_name: str) -> None:
 
     (root / "pyproject.toml").write_text(
         f'[build-system]\nrequires = ["hatchling"]\nbuild-backend = "hatchling.build"\n\n'
-        f'[project]\nname = "{project_name}"\nversion = "0.1.0"\ndependencies = ["aegis"]\n\n'
+        f'[project]\nname = "{project_name}"\nversion = "0.1.0"\ndependencies = ["rampart"]\n\n'
         f'[tool.pytest.ini_options]\nasyncio_mode = "auto"\ntestpaths = ["tests"]\n'
     )
     (root / "src" / project_name / "__init__.py").write_text("")
     (root / "src" / project_name / "agent.py").write_text(
-        '"""Example Aegis agent."""\n\nfrom dataclasses import dataclass\nfrom aegis import AgentState, graph, node\n\n\n@dataclass\nclass MyState(AgentState):\n    query: str = ""\n    result: str = ""\n\n\n@node()\nasync def process_node(state: MyState) -> MyState:\n    return state.update(result=f"Processed: {state.query}")\n\n\n@graph(name="my-agent", version="1.0.0")\nasync def my_agent(state: MyState) -> MyState:\n    return await process_node(state)\n'
+        '"""Example Rampart agent."""\n\nfrom dataclasses import dataclass\nfrom rampart import AgentState, graph, node\n\n\n@dataclass\nclass MyState(AgentState):\n    query: str = ""\n    result: str = ""\n\n\n@node()\nasync def process_node(state: MyState) -> MyState:\n    return state.update(result=f"Processed: {state.query}")\n\n\n@graph(name="my-agent", version="1.0.0")\nasync def my_agent(state: MyState) -> MyState:\n    return await process_node(state)\n'
     )
     (root / "tests" / "test_agent.py").write_text(
-        f'"""Tests for my_agent."""\n\nimport pytest\nfrom {project_name}.agent import MyState, my_agent\nfrom aegis import RunConfig\nfrom aegis.checkpointers import MemoryCheckpointer\n\n\nasync def test_my_agent():\n    result = await my_agent.run(\n        input=MyState(query="hello"),\n        config=RunConfig(thread_id="test-001", checkpointer=MemoryCheckpointer()),\n    )\n    assert result.status == "completed"\n    assert result.state.result == "Processed: hello"\n'
+        f'"""Tests for my_agent."""\n\nimport pytest\nfrom {project_name}.agent import MyState, my_agent\nfrom rampart import RunConfig\nfrom rampart.checkpointers import MemoryCheckpointer\n\n\nasync def test_my_agent():\n    result = await my_agent.run(\n        input=MyState(query="hello"),\n        config=RunConfig(thread_id="test-001", checkpointer=MemoryCheckpointer()),\n    )\n    assert result.status == "completed"\n    assert result.state.result == "Processed: hello"\n'
     )
 
     click.echo(f"✓ Created project '{project_name}'")
@@ -55,7 +55,7 @@ def run(graph_name: str, input_json: str, thread_id: str | None, checkpointer: s
     """Run a graph with the given input."""
     import uuid as _uuid
 
-    from aegis._decorators import _GRAPH_REGISTRY
+    from rampart._decorators import _GRAPH_REGISTRY
 
     _thread_id = thread_id or f"cli-{_uuid.uuid4().hex[:8]}"
 
@@ -70,9 +70,9 @@ def run(graph_name: str, input_json: str, thread_id: str | None, checkpointer: s
         click.echo(f"Invalid JSON input: {exc}", err=True)
         raise SystemExit(1) from None
 
-    from aegis._models import RunConfig
-    from aegis._runtime import _deserialize_state, _infer_state_type
-    from aegis.checkpointers import MemoryCheckpointer, SqliteCheckpointer
+    from rampart._models import RunConfig
+    from rampart._runtime import _deserialize_state, _infer_state_type
+    from rampart.checkpointers import MemoryCheckpointer, SqliteCheckpointer
 
     state_type = _infer_state_type(graph_def)
     input_state = _deserialize_state(input_data, state_type)
@@ -101,9 +101,9 @@ def run(graph_name: str, input_json: str, thread_id: str | None, checkpointer: s
 @click.option("--thread-id", required=True, help="Thread ID to resume")
 def resume(graph_name: str, thread_id: str) -> None:
     """Resume a failed or interrupted run from its last checkpoint."""
-    from aegis._decorators import _GRAPH_REGISTRY
-    from aegis._models import RunConfig
-    from aegis.checkpointers import SqliteCheckpointer
+    from rampart._decorators import _GRAPH_REGISTRY
+    from rampart._models import RunConfig
+    from rampart.checkpointers import SqliteCheckpointer
 
     graph_def = _GRAPH_REGISTRY.get(graph_name)
     if graph_def is None:
@@ -131,8 +131,8 @@ def resume(graph_name: str, thread_id: str) -> None:
 @click.option("--thread-id", required=True, help="Thread ID")
 def history(graph_name: str, thread_id: str) -> None:
     """Show checkpoint history for a thread."""
-    from aegis._decorators import _GRAPH_REGISTRY
-    from aegis.checkpointers import SqliteCheckpointer
+    from rampart._decorators import _GRAPH_REGISTRY
+    from rampart.checkpointers import SqliteCheckpointer
 
     graph_def = _GRAPH_REGISTRY.get(graph_name)
     if graph_def is None:
@@ -175,7 +175,7 @@ def run_eval(graph_name: str, suite: str) -> None:
         click.echo("No variable named 'suite' found in the eval file.", err=True)
         raise SystemExit(1)
 
-    from aegis._models import EvalGateFailure
+    from rampart._models import EvalGateFailure
 
     results = asyncio.run(suite_obj.run())
     click.echo(results.summary())
@@ -195,8 +195,8 @@ def run_eval(graph_name: str, suite: str) -> None:
 @click.option("--follow", is_flag=True, help="Follow live updates (not implemented in v1)")
 def trace(graph_name: str, thread_id: str, follow: bool) -> None:
     """Show the execution trace for a thread."""
-    from aegis._decorators import _GRAPH_REGISTRY
-    from aegis.checkpointers import SqliteCheckpointer
+    from rampart._decorators import _GRAPH_REGISTRY
+    from rampart.checkpointers import SqliteCheckpointer
 
     graph_def = _GRAPH_REGISTRY.get(graph_name)
     if graph_def is None:
@@ -219,7 +219,7 @@ def trace(graph_name: str, thread_id: str, follow: bool) -> None:
 @click.argument("graph_name")
 def permissions(graph_name: str) -> None:
     """Show the declared permission scope for a graph."""
-    from aegis._decorators import _GRAPH_REGISTRY
+    from rampart._decorators import _GRAPH_REGISTRY
 
     graph_def = _GRAPH_REGISTRY.get(graph_name)
     if graph_def is None:
@@ -261,11 +261,11 @@ def record(graph_name: str, input_json: str, cassette: str, thread_id: str | Non
     """Record a cassette from a live graph run."""
     import uuid as _uuid
 
-    from aegis._decorators import _GRAPH_REGISTRY
-    from aegis._models import RunConfig
-    from aegis._runtime import _deserialize_state, _infer_state_type
-    from aegis.checkpointers import MemoryCheckpointer
-    from aegis.testing import cassette as _cassette
+    from rampart._decorators import _GRAPH_REGISTRY
+    from rampart._models import RunConfig
+    from rampart._runtime import _deserialize_state, _infer_state_type
+    from rampart.checkpointers import MemoryCheckpointer
+    from rampart.testing import cassette as _cassette
 
     _thread_id = thread_id or f"cassette-{_uuid.uuid4().hex[:8]}"
     graph_def = _GRAPH_REGISTRY.get(graph_name)

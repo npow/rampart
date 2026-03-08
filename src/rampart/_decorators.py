@@ -251,7 +251,7 @@ class GraphDef:
     def _resolve_checkpointer(self, config: RunConfig | None) -> Any:  # CheckpointerBase
         """Return the checkpointer to use, in priority order:
         1. config.checkpointer (per-run override)
-        2. aegis.configure(checkpointer=...) global default
+        2. rampart.configure(checkpointer=...) global default
         3. graph-level default (memory or sqlite based on @graph(checkpointer=...))
         """
         from .checkpointers._memory import MemoryCheckpointer
@@ -260,7 +260,7 @@ class GraphDef:
         if config is not None and config.checkpointer is not None:
             return config.checkpointer
 
-        # Check global default set via aegis.configure()
+        # Check global default set via rampart.configure()
         from . import _globals
 
         if _globals.DEFAULT_CHECKPOINTER is not None:
@@ -300,7 +300,7 @@ def graph(
     permissions: PermissionScope | None = None,
     budget: Budget | None = None,
 ) -> Callable[[F], GraphDef]:
-    """Decorator that turns an async function into an Aegis graph."""
+    """Decorator that turns an async function into an Rampart graph."""
 
     def decorator(fn: F) -> GraphDef:
         if not inspect.iscoroutinefunction(fn):
@@ -329,7 +329,7 @@ def node(
     timeout_seconds: float | None = None,
     sandbox: bool = False,
 ) -> Any:
-    """Decorator that wraps an async node function with Aegis execution machinery."""
+    """Decorator that wraps an async node function with Rampart execution machinery."""
 
     def decorator(fn: Callable[..., Any]) -> NodeDef:
         if not inspect.iscoroutinefunction(fn):
@@ -362,7 +362,7 @@ def tool(
     approval_timeout_seconds: int = 3600,
     approval_on_timeout: str = "hard_stop",
 ) -> Any:
-    """Decorator that registers a function as an Aegis tool."""
+    """Decorator that registers a function as an Rampart tool."""
 
     def decorator(fn: Callable[..., Any]) -> ToolDef:
         tool_name = name or fn.__name__

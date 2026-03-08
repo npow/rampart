@@ -141,11 +141,11 @@ async def _run_graph(
     try:
         # Wrap in OTel span if configured
         if otel_tracer is not None:
-            with otel_tracer.start_as_current_span(f"aegis.graph.{graph_def.name}") as span:
-                span.set_attribute("aegis.graph_name", graph_def.name)
-                span.set_attribute("aegis.graph_version", graph_def.version)
-                span.set_attribute("aegis.run_id", run_id)
-                span.set_attribute("aegis.thread_id", config.thread_id)
+            with otel_tracer.start_as_current_span(f"rampart.graph.{graph_def.name}") as span:
+                span.set_attribute("rampart.graph_name", graph_def.name)
+                span.set_attribute("rampart.graph_version", graph_def.version)
+                span.set_attribute("rampart.run_id", run_id)
+                span.set_attribute("rampart.thread_id", config.thread_id)
                 # Capture OTel trace ID for observability linkage
                 try:
                     trace.otel_trace_id = format(span.get_span_context().trace_id, "032x")
@@ -360,7 +360,7 @@ async def _execute_node_in_context(
     state: AgentState,
     ctx: RunContext,
 ) -> AgentState:
-    """Execute a single node with full Aegis machinery."""
+    """Execute a single node with full Rampart machinery."""
     step = ctx.next_step()
 
     # Fast-forward: return cached state if this step has a completed checkpoint
@@ -391,11 +391,11 @@ async def _execute_node_in_context(
     try:
         # Wrap in OTel span if configured
         if ctx.otel_tracer is not None:
-            with ctx.otel_tracer.start_as_current_span(f"aegis.node.{node_def.name}") as span:
-                span.set_attribute("aegis.node_name", node_def.name)
-                span.set_attribute("aegis.graph_name", ctx.graph_name)
-                span.set_attribute("aegis.run_id", ctx.run_id)
-                span.set_attribute("aegis.step", step)
+            with ctx.otel_tracer.start_as_current_span(f"rampart.node.{node_def.name}") as span:
+                span.set_attribute("rampart.node_name", node_def.name)
+                span.set_attribute("rampart.graph_name", ctx.graph_name)
+                span.set_attribute("rampart.run_id", ctx.run_id)
+                span.set_attribute("rampart.step", step)
                 result = await _execute_with_retry(node_def, state, ctx, node_trace)
         else:
             result = await _execute_with_retry(node_def, state, ctx, node_trace)

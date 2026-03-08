@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from aegis import AgentState, RunConfig, graph, node, tool
-from aegis.checkpointers import MemoryCheckpointer
-from aegis.testing import MockTool, cassette
+from rampart import AgentState, RunConfig, graph, node, tool
+from rampart.checkpointers import MemoryCheckpointer
+from rampart.testing import MockTool, cassette
 
 # ── MockTool unit tests ───────────────────────────────────────────────────────
 

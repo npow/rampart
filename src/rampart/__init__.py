@@ -1,4 +1,4 @@
-"""Aegis — A runtime that makes LLM agents production-safe by default."""
+"""Rampart — A runtime that makes LLM agents production-safe by default."""
 
 from __future__ import annotations
 
@@ -28,9 +28,6 @@ from ._decorators import (  # noqa: E402
     tool,
 )
 from ._models import (  # noqa: E402
-    AegisCassetteStaleError,
-    # Exceptions
-    AegisError,
     # State
     AgentState,
     ApprovalPolicy,
@@ -67,6 +64,9 @@ from ._models import (  # noqa: E402
     PermissionDeniedError,
     PermissionScope,
     PermissionViolationEvent,
+    RampartCassetteStaleError,
+    # Exceptions
+    RampartError,
     RunConfig,
     RunError,
     RunResult,
@@ -148,10 +148,10 @@ __all__ = [
     "PostgresCheckpointer",
     "OTelTracer",
     # Exceptions
-    "AegisError",
+    "RampartError",
     "BudgetExceededError",
     "PermissionDeniedError",
-    "AegisCassetteStaleError",
+    "RampartCassetteStaleError",
     "EvalGateFailure",
     "GraphVersionConflict",
     "NoCheckpointError",

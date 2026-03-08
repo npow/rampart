@@ -2,9 +2,9 @@
 
 from dataclasses import dataclass, field
 
-from aegis import AgentState, RunConfig, graph, node
-from aegis._multi_agent import chain, parallel, supervisor
-from aegis.checkpointers import MemoryCheckpointer
+from rampart import AgentState, RunConfig, graph, node
+from rampart._multi_agent import chain, parallel, supervisor
+from rampart.checkpointers import MemoryCheckpointer
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -241,7 +241,7 @@ async def test_chain_propagates_metadata():
 
     @node()
     async def capture_meta_node(state: PipeState) -> PipeState:
-        from aegis._context import _run_context
+        from rampart._context import _run_context
 
         ctx = _run_context.get()
         # Metadata is on RunConfig, not RunContext directly,

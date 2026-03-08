@@ -2,12 +2,12 @@
 
 import pytest
 
-from aegis import (
+from rampart import (
     NetworkPermission,
     PermissionDeniedError,
     PermissionScope,
 )
-from aegis._permissions import check_network_permission
+from rampart._permissions import check_network_permission
 
 # ── Unit tests ────────────────────────────────────────────────────────────────
 
@@ -63,16 +63,16 @@ def test_intercept_wildcard_subdomain():
 
 
 def test_http_intercept_installed():
-    """The HTTP intercept should be installed at aegis import time."""
-    from aegis._http_intercept import _installed
+    """The HTTP intercept should be installed at rampart import time."""
+    from rampart._http_intercept import _installed
 
     assert _installed is True
 
 
 def test_http_intercept_does_not_block_outside_run():
     """Outside a graph run, HTTP calls should be allowed (no RunContext)."""
-    from aegis._context import _run_context
-    from aegis._http_intercept import _intercept
+    from rampart._context import _run_context
+    from rampart._http_intercept import _intercept
 
     # No run context set — should not raise
     assert _run_context.get() is None

@@ -15,7 +15,7 @@ class CheckpointerBase(Protocol):
     can guarantee cleanup on shutdown::
 
         async with PostgresCheckpointer(url) as cp:
-            aegis.configure(checkpointer=cp)
+            rampart.configure(checkpointer=cp)
             ...
     """
 

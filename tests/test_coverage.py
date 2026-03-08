@@ -10,9 +10,9 @@ from pathlib import Path
 
 import pytest
 
-from aegis import AgentState, Budget, RunConfig, graph, node, tool
-from aegis.checkpointers import MemoryCheckpointer
-from aegis.testing import MockTool
+from rampart import AgentState, Budget, RunConfig, graph, node, tool
+from rampart.checkpointers import MemoryCheckpointer
+from rampart.testing import MockTool
 
 # ── Shared fixtures ────────────────────────────────────────────────────────────
 
@@ -43,7 +43,7 @@ async def cov_graph(state: CovState) -> CovState:
 
 
 def _make_trace(tool_calls=None):
-    from aegis._models import NodeTrace, RunTrace
+    from rampart._models import NodeTrace, RunTrace
 
     tcs = tool_calls or []
     node_trace = NodeTrace(
@@ -68,7 +68,7 @@ def _make_trace(tool_calls=None):
 
 
 def _make_tool_call(name="my_tool", **args):
-    from aegis._models import ToolCall
+    from rampart._models import ToolCall
 
     return ToolCall(
         call_id="c1",
@@ -84,8 +84,8 @@ def _make_tool_call(name="my_tool", **args):
 
 def test_assertion_tool_call_called_false_but_was_called():
     """called=False but the tool was called → fail."""
-    from aegis._models import ToolCallAssertion
-    from aegis.eval._assertions import evaluate_assertion
+    from rampart._models import ToolCallAssertion
+    from rampart.eval._assertions import evaluate_assertion
 
     trace = _make_trace([_make_tool_call("my_tool")])
     assertion = ToolCallAssertion(description="d", tool_name="my_tool", called=False)
@@ -97,8 +97,8 @@ def test_assertion_tool_call_called_false_but_was_called():
 
 def test_assertion_tool_call_min_times_not_reached():
     """Tool called once but min_times=3 → fail."""
-    from aegis._models import ToolCallAssertion
-    from aegis.eval._assertions import evaluate_assertion
+    from rampart._models import ToolCallAssertion
+    from rampart.eval._assertions import evaluate_assertion
 
     trace = _make_trace([_make_tool_call("my_tool")])
     assertion = ToolCallAssertion(description="d", tool_name="my_tool", called=True, min_times=3)
@@ -109,8 +109,8 @@ def test_assertion_tool_call_min_times_not_reached():
 
 def test_assertion_tool_call_args_match_fails():
     """args_match specified but no call matches → fail with actual args."""
-    from aegis._models import ToolCallAssertion
-    from aegis.eval._assertions import evaluate_assertion
+    from rampart._models import ToolCallAssertion
+    from rampart.eval._assertions import evaluate_assertion
 
     tc = _make_tool_call("my_tool", query="hello")
     trace = _make_trace([tc])
@@ -127,8 +127,8 @@ def test_assertion_tool_call_args_match_fails():
 
 def test_assertion_tool_call_args_match_passes():
     """args_match where at least one call satisfies all expected args → pass."""
-    from aegis._models import ToolCallAssertion
-    from aegis.eval._assertions import evaluate_assertion
+    from rampart._models import ToolCallAssertion
+    from rampart.eval._assertions import evaluate_assertion
 
     tc = _make_tool_call("my_tool", query="world")
     trace = _make_trace([tc])
@@ -144,8 +144,8 @@ def test_assertion_tool_call_args_match_passes():
 
 def test_assertion_unknown_type():
     """An unrecognized assertion type returns (False, error message)."""
-    from aegis._models import EvalAssertion
-    from aegis.eval._assertions import evaluate_assertion
+    from rampart._models import EvalAssertion
+    from rampart.eval._assertions import evaluate_assertion
 
     trace = _make_trace()
     assertion = EvalAssertion(description="mystery")
@@ -156,8 +156,8 @@ def test_assertion_unknown_type():
 
 def test_assertion_none_trace_for_trace_snapshot():
     """TraceSnapshotAssertion with trace=None → False."""
-    from aegis._models import TraceSnapshotAssertion
-    from aegis.eval._assertions import evaluate_assertion
+    from rampart._models import TraceSnapshotAssertion
+    from rampart.eval._assertions import evaluate_assertion
 
     assertion = TraceSnapshotAssertion(description="snap", golden_trace_path="/tmp/golden.json")
     passed, msg = evaluate_assertion(assertion, CovState(), trace=None)
@@ -167,8 +167,8 @@ def test_assertion_none_trace_for_trace_snapshot():
 
 def test_assertion_none_trace_for_tool_call():
     """ToolCallAssertion with trace=None → False."""
-    from aegis._models import ToolCallAssertion
-    from aegis.eval._assertions import evaluate_assertion
+    from rampart._models import ToolCallAssertion
+    from rampart.eval._assertions import evaluate_assertion
 
     assertion = ToolCallAssertion(description="d", tool_name="my_tool")
     passed, msg = evaluate_assertion(assertion, CovState(), trace=None)
@@ -178,8 +178,8 @@ def test_assertion_none_trace_for_tool_call():
 
 def test_assertion_schema_predicate_raises():
     """SchemaAssertion where predicate raises → False with error message."""
-    from aegis._models import SchemaAssertion
-    from aegis.eval._assertions import evaluate_assertion
+    from rampart._models import SchemaAssertion
+    from rampart.eval._assertions import evaluate_assertion
 
     trace = _make_trace()
 
@@ -195,8 +195,8 @@ def test_assertion_schema_predicate_raises():
 def test_trace_snapshot_assertion_diverged_sequence():
     """Golden trace has different tool sequence → fail with diff message."""
     with tempfile.TemporaryDirectory() as tmpdir:
-        from aegis._models import TraceSnapshotAssertion
-        from aegis.eval._assertions import evaluate_assertion
+        from rampart._models import TraceSnapshotAssertion
+        from rampart.eval._assertions import evaluate_assertion
 
         golden_path = f"{tmpdir}/golden.json"
         # Write a golden trace with tool "tool_a"
@@ -215,8 +215,8 @@ def test_trace_snapshot_assertion_diverged_sequence():
 def test_trace_snapshot_assertion_args_diverged():
     """Same tool sequence, different args → fail with args diverged message."""
     with tempfile.TemporaryDirectory() as tmpdir:
-        from aegis._models import TraceSnapshotAssertion
-        from aegis.eval._assertions import evaluate_assertion
+        from rampart._models import TraceSnapshotAssertion
+        from rampart.eval._assertions import evaluate_assertion
 
         golden_path = f"{tmpdir}/golden.json"
         golden = [{"tool_name": "tool_a", "node_name": "n", "args": {"x": 1}}]
@@ -239,7 +239,7 @@ def test_trace_snapshot_assertion_args_diverged():
 
 async def test_eval_suite_status_mismatch():
     """EvalCase.expected_status='failed' but graph completed → fail."""
-    from aegis.eval import EvalCase, EvalSuite, SchemaAssertion
+    from rampart.eval import EvalCase, EvalSuite, SchemaAssertion
 
     suite = EvalSuite(
         name="status-mismatch-suite",
@@ -262,7 +262,7 @@ async def test_eval_suite_status_mismatch():
 
 async def test_eval_suite_graph_raises_exception():
     """Graph raises unexpected exception → case fails gracefully."""
-    from aegis.eval import EvalCase, EvalSuite, SchemaAssertion
+    from rampart.eval import EvalCase, EvalSuite, SchemaAssertion
 
     @node(retries=0)
     async def explode(state: CovState) -> CovState:
@@ -292,7 +292,7 @@ async def test_eval_suite_graph_raises_exception():
 
 async def test_eval_suite_graph_run_raises_directly():
     """EvalSuite._run_case handles a graph whose .run() raises (not just returns failed)."""
-    from aegis.eval import EvalCase, EvalSuite, SchemaAssertion
+    from rampart.eval import EvalCase, EvalSuite, SchemaAssertion
 
     class _RaisingGraph:
         """Mock graph object that raises directly from .run()."""
@@ -323,7 +323,7 @@ async def test_eval_suite_graph_run_raises_directly():
 
 async def test_eval_suite_no_cassette_counts_live_calls():
     """Without a cassette, non-mocked tool calls are counted as live_calls_made."""
-    from aegis.eval import EvalCase, EvalSuite, SchemaAssertion, ToolCallAssertion
+    from rampart.eval import EvalCase, EvalSuite, SchemaAssertion, ToolCallAssertion
 
     suite = EvalSuite(
         name="live-calls-suite",
@@ -354,7 +354,7 @@ async def test_eval_suite_no_cassette_counts_live_calls():
 
 async def test_graph_stream_yields_events():
     """stream() yields one event per node completion."""
-    from aegis._runtime import GraphEvent
+    from rampart._runtime import GraphEvent
 
     @dataclass
     class StreamState(AgentState):
@@ -468,7 +468,7 @@ async def test_graph_fork_replays_from_checkpoint():
 
 async def test_graph_fork_missing_checkpoint_raises():
     """fork() raises NoCheckpointError for non-existent checkpoint_id."""
-    from aegis._models import NoCheckpointError
+    from rampart._models import NoCheckpointError
 
     @dataclass
     class FState2(AgentState):
@@ -500,28 +500,28 @@ async def test_graph_fork_missing_checkpoint_raises():
 
 
 def test_compute_backoff_none():
-    from aegis._runtime import _compute_backoff
+    from rampart._runtime import _compute_backoff
 
     assert _compute_backoff("none", 1) == 0.0
     assert _compute_backoff("none", 5) == 0.0
 
 
 def test_compute_backoff_linear():
-    from aegis._runtime import _compute_backoff
+    from rampart._runtime import _compute_backoff
 
     assert _compute_backoff("linear", 1) == 1.0
     assert _compute_backoff("linear", 3) == 3.0
 
 
 def test_compute_backoff_exponential():
-    from aegis._runtime import _compute_backoff
+    from rampart._runtime import _compute_backoff
 
     assert _compute_backoff("exponential", 1) == 1.0  # 2^0
     assert _compute_backoff("exponential", 3) == 4.0  # 2^2
 
 
 def test_compute_backoff_unknown_defaults_to_zero():
-    from aegis._runtime import _compute_backoff
+    from rampart._runtime import _compute_backoff
 
     assert _compute_backoff("random_strategy", 2) == 0.0
 
@@ -531,8 +531,8 @@ def test_compute_backoff_unknown_defaults_to_zero():
 
 def test_infer_state_type_raises_for_unannotated():
     """_infer_state_type raises TypeError when no AgentState subclass is found."""
-    from aegis._decorators import GraphDef
-    from aegis._runtime import _infer_state_type
+    from rampart._decorators import GraphDef
+    from rampart._runtime import _infer_state_type
 
     async def unannotated_fn(state):  # no annotations
         return state
@@ -579,7 +579,7 @@ async def test_budget_downgrade_model_does_not_stop():
 
 async def test_budget_handler_extend():
     """Budget exceeded handler returning BudgetDecision.extend() continues the run."""
-    from aegis._models import BudgetDecision
+    from rampart._models import BudgetDecision
 
     @node()
     async def three_calls(state: CovState, tools) -> CovState:
@@ -609,7 +609,7 @@ async def test_budget_handler_extend():
 
 async def test_budget_handler_downgrade_decision():
     """Budget exceeded handler returning BudgetDecision.downgrade() continues."""
-    from aegis._models import BudgetDecision
+    from rampart._models import BudgetDecision
 
     @node()
     async def two_more(state: CovState, tools) -> CovState:
@@ -667,9 +667,9 @@ async def test_budget_handler_raises_falls_back_to_hard_stop():
 
 async def test_http_intercept_inside_run_allows_permitted_domain():
     """Inside a graph run with a permitted domain, _intercept should not raise."""
-    from aegis._context import RunContext, _run_context
-    from aegis._http_intercept import _intercept
-    from aegis._models import NetworkPermission, PermissionScope, RunTrace
+    from rampart._context import RunContext, _run_context
+    from rampart._http_intercept import _intercept
+    from rampart._models import NetworkPermission, PermissionScope, RunTrace
 
     trace = RunTrace(
         run_id="r1",
@@ -705,9 +705,9 @@ async def test_http_intercept_inside_run_allows_permitted_domain():
 
 async def test_http_intercept_inside_run_blocks_forbidden_domain():
     """Inside a graph run, _intercept raises PermissionDeniedError for non-whitelisted domain."""
-    from aegis._context import RunContext, _run_context
-    from aegis._http_intercept import _intercept
-    from aegis._models import NetworkPermission, PermissionDeniedError, PermissionScope, RunTrace
+    from rampart._context import RunContext, _run_context
+    from rampart._http_intercept import _intercept
+    from rampart._models import NetworkPermission, PermissionDeniedError, PermissionScope, RunTrace
 
     trace = RunTrace(
         run_id="r1",
@@ -744,9 +744,9 @@ async def test_http_intercept_inside_run_blocks_forbidden_domain():
 
 async def test_http_intercept_no_permission_scope_allows_all():
     """Inside a graph run with no permission_scope, all domains are allowed."""
-    from aegis._context import RunContext, _run_context
-    from aegis._http_intercept import _intercept
-    from aegis._models import RunTrace
+    from rampart._context import RunContext, _run_context
+    from rampart._http_intercept import _intercept
+    from rampart._models import RunTrace
 
     trace = RunTrace(
         run_id="r1",
@@ -780,8 +780,8 @@ async def test_http_intercept_no_permission_scope_allows_all():
 
 async def test_graph_context_subgraph_call():
     """GraphContext allows calling registered sub-graphs from within a node."""
-    from aegis._context import GraphContext, RunContext
-    from aegis._models import RunTrace
+    from rampart._context import GraphContext, RunContext
+    from rampart._models import RunTrace
 
     @dataclass
     class SubState(AgentState):
@@ -827,8 +827,8 @@ async def test_graph_context_subgraph_call():
 
 def test_graph_context_raises_for_unknown_graph():
     """GraphContext raises KeyError for unregistered graph name."""
-    from aegis._context import GraphContext, RunContext
-    from aegis._models import RunTrace
+    from rampart._context import GraphContext, RunContext
+    from rampart._models import RunTrace
 
     cp = MemoryCheckpointer()
     trace = RunTrace(
@@ -857,8 +857,8 @@ def test_graph_context_raises_for_unknown_graph():
 
 def test_graph_context_private_attr_raises():
     """GraphContext raises AttributeError for underscore-prefixed names."""
-    from aegis._context import GraphContext, RunContext
-    from aegis._models import RunTrace
+    from rampart._context import GraphContext, RunContext
+    from rampart._models import RunTrace
 
     cp = MemoryCheckpointer()
     trace = RunTrace(
@@ -908,7 +908,7 @@ async def test_graph_checkpoint_history_via_api():
 
 def test_budget_decision_downgrade_factory():
     """BudgetDecision.downgrade() creates correct action/model."""
-    from aegis._models import BudgetDecision
+    from rampart._models import BudgetDecision
 
     bd = BudgetDecision.downgrade("gpt-3.5-turbo")
     assert bd.action == "downgrade"
@@ -918,7 +918,7 @@ def test_budget_decision_downgrade_factory():
 
 def test_budget_status_compute_pct_all_dimensions():
     """BudgetStatus.compute_pct() populates all percentage keys."""
-    from aegis._models import Budget, BudgetStatus
+    from rampart._models import Budget, BudgetStatus
 
     budget = Budget(
         max_tokens=1000,

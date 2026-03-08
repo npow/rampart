@@ -1,9 +1,9 @@
-"""Tests for Aegis data models."""
+"""Tests for Rampart data models."""
 
 from dataclasses import dataclass
 from datetime import datetime
 
-from aegis import (
+from rampart import (
     AgentState,
     Budget,
     BudgetDecision,
@@ -126,7 +126,7 @@ def test_permission_scope_defaults():
 
 
 def test_network_permission_domain_matching():
-    from aegis._permissions import _domain_matches_any
+    from rampart._permissions import _domain_matches_any
 
     patterns = ["*.wikipedia.org", "arxiv.org"]
     assert _domain_matches_any("en.wikipedia.org", patterns) is True
@@ -139,8 +139,8 @@ def test_network_permission_domain_matching():
 
 
 def test_eval_suite_result_summary():
-    from aegis import EvalCaseResult, EvalSuiteResult
-    from aegis._models import RunTrace
+    from rampart import EvalCaseResult, EvalSuiteResult
+    from rampart._models import RunTrace
 
     trace = RunTrace(
         run_id="r1",

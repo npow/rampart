@@ -1,4 +1,4 @@
-"""Global Aegis configuration helpers."""
+"""Global Rampart configuration helpers."""
 
 from __future__ import annotations
 
@@ -14,14 +14,14 @@ def configure(
     tracer: Any | None = None,
     http_proxy_port: int | None = None,
 ) -> None:
-    """Configure global Aegis defaults.
+    """Configure global Rampart defaults.
 
     In production, call this at application startup::
 
-        import aegis, os
-        aegis.configure(
-            checkpointer=aegis.PostgresCheckpointer(os.environ["DATABASE_URL"]),
-            tracer=aegis.OTelTracer(endpoint=os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"]),
+        import rampart, os
+        rampart.configure(
+            checkpointer=rampart.PostgresCheckpointer(os.environ["DATABASE_URL"]),
+            tracer=rampart.OTelTracer(endpoint=os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"]),
         )
 
     Args:
@@ -31,7 +31,7 @@ def configure(
             routed through (sets HTTP_PROXY / HTTPS_PROXY env vars so that httpx and
             requests automatically use it for newly created sessions).
     """
-    import aegis._globals as _g
+    import rampart._globals as _g
 
     if checkpointer is not None:
         _g.DEFAULT_CHECKPOINTER = checkpointer
@@ -48,7 +48,7 @@ def configure(
 
 
 class PostgresCheckpointer:
-    """Postgres-backed checkpoint store (requires asyncpg: ``pip install aegis[postgres]``)."""
+    """Postgres-backed checkpoint store (requires asyncpg: ``pip install rampart[postgres]``)."""
 
     _CREATE_TABLE = """
         CREATE TABLE IF NOT EXISTS {table} (
@@ -73,7 +73,7 @@ class PostgresCheckpointer:
     def __init__(
         self,
         connection_string: str,
-        table_name: str = "aegis_checkpoints",
+        table_name: str = "rampart_checkpoints",
         pool_min: int = 1,
         pool_max: int = 5,
     ) -> None:
@@ -112,7 +112,7 @@ class PostgresCheckpointer:
             except ImportError as exc:
                 raise ImportError(
                     "asyncpg is required for PostgresCheckpointer. "
-                    "Install it with: pip install aegis[postgres]"
+                    "Install it with: pip install rampart[postgres]"
                 ) from exc
             self._pool = await asyncpg.create_pool(
                 self.connection_string,
@@ -235,13 +235,13 @@ class PostgresCheckpointer:
 class OTelTracer:
     """OpenTelemetry tracer that instruments every graph run and node execution.
 
-    Requires ``pip install aegis[otel]``. Falls back to a no-op if the
+    Requires ``pip install rampart[otel]``. Falls back to a no-op if the
     opentelemetry packages are not installed.
 
     Example::
 
-        aegis.configure(
-            tracer=aegis.OTelTracer(
+        rampart.configure(
+            tracer=rampart.OTelTracer(
                 endpoint="http://otel-collector:4317",
                 service_name="my-agent",
             )
@@ -251,7 +251,7 @@ class OTelTracer:
     def __init__(
         self,
         endpoint: str | None = None,
-        service_name: str = "aegis",
+        service_name: str = "rampart",
     ) -> None:
         self.endpoint = endpoint
         self.service_name = service_name
@@ -288,19 +288,19 @@ class OTelTracer:
 
                     warnings.warn(
                         "opentelemetry-exporter-otlp-proto-grpc not installed; "
-                        "spans will not be exported. Install aegis[otel].",
+                        "spans will not be exported. Install rampart[otel].",
                         stacklevel=2,
                     )
 
             trace.set_tracer_provider(provider)
-            self._tracer = trace.get_tracer("aegis", tracer_provider=provider)
+            self._tracer = trace.get_tracer("rampart", tracer_provider=provider)
 
         except ImportError:
             import warnings
 
             warnings.warn(
                 "opentelemetry-api / opentelemetry-sdk not installed; "
-                "tracing disabled. Install aegis[otel] to enable.",
+                "tracing disabled. Install rampart[otel] to enable.",
                 stacklevel=2,
             )
             self._tracer = None

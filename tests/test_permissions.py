@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 import pytest
 
-from aegis import (
+from rampart import (
     AgentState,
     FilesystemPermission,
     NetworkPermission,
@@ -15,15 +15,15 @@ from aegis import (
     node,
     tool,
 )
-from aegis._permissions import (
+from rampart._permissions import (
     _domain_matches_any,
     _path_matches_any,
     check_filesystem_permission,
     check_network_permission,
     check_tool_permission,
 )
-from aegis.checkpointers import MemoryCheckpointer
-from aegis.testing import MockTool
+from rampart.checkpointers import MemoryCheckpointer
+from rampart.testing import MockTool
 
 # ── Unit tests for permission helpers ─────────────────────────────────────────
 

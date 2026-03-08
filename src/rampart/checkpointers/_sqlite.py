@@ -9,7 +9,7 @@ from typing import Any
 
 from .._models import Checkpoint
 
-_DEFAULT_DB_PATH = Path.home() / ".aegis" / "checkpoints.db"
+_DEFAULT_DB_PATH = Path.home() / ".rampart" / "checkpoints.db"
 
 
 class SqliteCheckpointer:
@@ -33,7 +33,7 @@ class SqliteCheckpointer:
         except ImportError as exc:
             raise ImportError(
                 "aiosqlite is required for SqliteCheckpointer. "
-                "Install it with: pip install aegis[sqlite]"
+                "Install it with: pip install rampart[sqlite]"
             ) from exc
 
         db = await aiosqlite.connect(str(self._db_path))
@@ -47,7 +47,7 @@ class SqliteCheckpointer:
     async def _init_schema(self, db: Any) -> None:
         await db.execute(
             """
-            CREATE TABLE IF NOT EXISTS aegis_checkpoints (
+            CREATE TABLE IF NOT EXISTS rampart_checkpoints (
                 id           TEXT NOT NULL,
                 thread_id    TEXT NOT NULL,
                 run_id       TEXT NOT NULL,
@@ -65,7 +65,7 @@ class SqliteCheckpointer:
         )
         await db.execute(
             "CREATE INDEX IF NOT EXISTS idx_thread_graph "
-            "ON aegis_checkpoints(thread_id, graph_name)"
+            "ON rampart_checkpoints(thread_id, graph_name)"
         )
         await db.commit()
 
@@ -89,7 +89,7 @@ class SqliteCheckpointer:
         db = await self._get_db()
         await db.execute(
             """
-            INSERT OR REPLACE INTO aegis_checkpoints
+            INSERT OR REPLACE INTO rampart_checkpoints
               (id, thread_id, run_id, graph_name, graph_version, step,
                node_name, state_snapshot, created_at, parent_checkpoint_id,
                is_fork_root)
@@ -114,7 +114,7 @@ class SqliteCheckpointer:
     async def get_latest(self, thread_id: str, graph_name: str) -> Checkpoint | None:
         db = await self._get_db()
         async with db.execute(
-            "SELECT * FROM aegis_checkpoints "
+            "SELECT * FROM rampart_checkpoints "
             "WHERE thread_id=? AND graph_name=? "
             "ORDER BY step DESC LIMIT 1",
             (thread_id, graph_name),
@@ -125,7 +125,7 @@ class SqliteCheckpointer:
     async def get_by_step(self, thread_id: str, graph_name: str, step: int) -> Checkpoint | None:
         db = await self._get_db()
         async with db.execute(
-            "SELECT * FROM aegis_checkpoints WHERE thread_id=? AND graph_name=? AND step=?",
+            "SELECT * FROM rampart_checkpoints WHERE thread_id=? AND graph_name=? AND step=?",
             (thread_id, graph_name, step),
         ) as cursor:
             row = await cursor.fetchone()
@@ -134,7 +134,7 @@ class SqliteCheckpointer:
     async def get_history(self, thread_id: str, graph_name: str) -> list[Checkpoint]:
         db = await self._get_db()
         async with db.execute(
-            "SELECT * FROM aegis_checkpoints WHERE thread_id=? AND graph_name=? ORDER BY step ASC",
+            "SELECT * FROM rampart_checkpoints WHERE thread_id=? AND graph_name=? ORDER BY step ASC",
             (thread_id, graph_name),
         ) as cursor:
             rows = await cursor.fetchall()
@@ -143,7 +143,7 @@ class SqliteCheckpointer:
     async def delete_thread(self, thread_id: str, graph_name: str) -> None:
         db = await self._get_db()
         await db.execute(
-            "DELETE FROM aegis_checkpoints WHERE thread_id=? AND graph_name=?",
+            "DELETE FROM rampart_checkpoints WHERE thread_id=? AND graph_name=?",
             (thread_id, graph_name),
         )
         await db.commit()

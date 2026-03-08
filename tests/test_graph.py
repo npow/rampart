@@ -2,8 +2,8 @@
 
 from dataclasses import dataclass
 
-from aegis import AgentState, RunConfig, graph, node
-from aegis.checkpointers import MemoryCheckpointer
+from rampart import AgentState, RunConfig, graph, node
+from rampart.checkpointers import MemoryCheckpointer
 
 # ── Simple graph fixtures ─────────────────────────────────────────────────────
 
@@ -294,8 +294,8 @@ async def test_graph_resume_after_simulated_crash():
 
 
 async def test_graph_with_mock_tools():
-    from aegis import tool
-    from aegis.testing import MockTool
+    from rampart import tool
+    from rampart.testing import MockTool
 
     @dataclass
     class SearchState(AgentState):
@@ -339,8 +339,8 @@ async def test_graph_with_mock_tools():
 
 
 async def test_mock_tool_noop():
-    from aegis import tool
-    from aegis.testing import MockTool
+    from rampart import tool
+    from rampart.testing import MockTool
 
     @dataclass
     class WriteState(AgentState):
@@ -409,7 +409,7 @@ async def test_resume_raises_when_no_checkpoints():
     """resume() raises NoCheckpointError when no checkpoints exist."""
     import pytest
 
-    from aegis._models import NoCheckpointError
+    from rampart._models import NoCheckpointError
 
     cp = MemoryCheckpointer()
     with pytest.raises(NoCheckpointError):
@@ -440,8 +440,8 @@ async def test_node_returns_wrong_type_fails_graph():
 
 
 async def test_mock_tool_raises_propagates_as_failure():
-    from aegis import tool
-    from aegis.testing import MockTool
+    from rampart import tool
+    from rampart.testing import MockTool
 
     @dataclass
     class ErrState(AgentState):

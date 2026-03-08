@@ -2,9 +2,9 @@
 
 from dataclasses import dataclass
 
-from aegis import AgentState, Budget, RunConfig, graph, node, tool
-from aegis.checkpointers import MemoryCheckpointer
-from aegis.testing import MockTool
+from rampart import AgentState, Budget, RunConfig, graph, node, tool
+from rampart.checkpointers import MemoryCheckpointer
+from rampart.testing import MockTool
 
 
 @dataclass

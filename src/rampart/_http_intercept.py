@@ -1,6 +1,6 @@
 """HTTP transport Layer 1 — Python library monkey-patching.
 
-Intercepts outbound HTTP calls when inside an Aegis graph run and checks
+Intercepts outbound HTTP calls when inside an Rampart graph run and checks
 them against the active permission scope. Covers httpx and requests.
 Layer 2 (proxy injection) and Layer 3 (sandbox) are stubs in this release.
 """
@@ -18,7 +18,7 @@ _originals: dict[str, Any] = {}
 
 
 def install() -> None:
-    """Monkey-patch HTTP libraries. Called once at aegis import time."""
+    """Monkey-patch HTTP libraries. Called once at rampart import time."""
     global _installed
     with _lock:
         if _installed:

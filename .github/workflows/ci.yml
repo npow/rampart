@@ -22,7 +22,7 @@ jobs:
       - name: Ruff format check
         run: ruff format --check src/ tests/
       - name: Mypy type check
-        run: mypy src/aegis
+        run: mypy src/rampart
 
   test:
     name: Tests (Python ${{ matrix.python-version }})
@@ -41,7 +41,7 @@ jobs:
       - name: Run tests with coverage
         run: |
           pytest tests/ \
-            --cov=aegis \
+            --cov=rampart \
             --cov-report=xml \
             --cov-report=term-missing \
             --cov-fail-under=80 \

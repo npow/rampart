@@ -1,4 +1,4 @@
-"""Checkpoint backends for Aegis."""
+"""Checkpoint backends for Rampart."""
 
 from ._base import CheckpointerBase
 from ._memory import MemoryCheckpointer

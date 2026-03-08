@@ -1,4 +1,4 @@
-"""All data models for Aegis — translated from PRD section 8."""
+"""All data models for Rampart — translated from PRD section 8."""
 
 from __future__ import annotations
 
@@ -76,7 +76,7 @@ class Checkpoint:
 class CheckpointBackendConfig:
     type: Literal["memory", "sqlite", "postgres", "redis", "dynamodb"]
     connection_string: str | None = None
-    table_name: str = "aegis_checkpoints"
+    table_name: str = "rampart_checkpoints"
     ttl_days: int | None = None  # None = retain indefinitely
 
 
@@ -467,11 +467,11 @@ class EvalSuiteResult:
 # ── Custom Exceptions ─────────────────────────────────────────────────────────
 
 
-class AegisError(Exception):
-    """Base class for all Aegis exceptions."""
+class RampartError(Exception):
+    """Base class for all Rampart exceptions."""
 
 
-class BudgetExceededError(AegisError):
+class BudgetExceededError(RampartError):
     def __init__(self, event: BudgetExceededEvent) -> None:
         self.event = event
         super().__init__(
@@ -479,27 +479,27 @@ class BudgetExceededError(AegisError):
         )
 
 
-class PermissionDeniedError(AegisError):
+class PermissionDeniedError(RampartError):
     def __init__(self, event: PermissionViolationEvent) -> None:
         self.event = event
         super().__init__(f"Permission denied: {event.violation_type} — {event.attempted_action}")
 
 
-class AegisCassetteStaleError(AegisError):
+class RampartCassetteStaleError(RampartError):
     pass
 
 
-class EvalGateFailure(AegisError):
+class EvalGateFailure(RampartError):
     pass
 
 
-class GraphVersionConflict(AegisError):
+class GraphVersionConflict(RampartError):
     pass
 
 
-class NoCheckpointError(AegisError):
+class NoCheckpointError(RampartError):
     pass
 
 
-class LLMNotConfiguredError(AegisError):
+class LLMNotConfiguredError(RampartError):
     pass
