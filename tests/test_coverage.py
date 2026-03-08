@@ -334,7 +334,9 @@ async def test_eval_suite_no_cassette_counts_live_calls():
                 input=CovState(),
                 assertions=[
                     ToolCallAssertion(description="cov_tool called", tool_name="cov_tool"),
-                    SchemaAssertion(predicate=lambda s: s.value == 1, description="value incremented"),
+                    SchemaAssertion(
+                        predicate=lambda s: s.value == 1, description="value incremented"
+                    ),
                 ],
                 cassette=None,  # no cassette — live path
             ),

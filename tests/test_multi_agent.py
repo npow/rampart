@@ -327,4 +327,6 @@ async def test_supervisor_specialist_timeout_returns_failed_result():
         config=RunConfig(thread_id="timeout-specialist-001", checkpointer=cp),
     )
     assert result.status == "failed"
-    assert "timed out" in result.error.message.lower() or "TimeoutError" in result.error.exception_type
+    assert (
+        "timed out" in result.error.message.lower() or "TimeoutError" in result.error.exception_type
+    )
