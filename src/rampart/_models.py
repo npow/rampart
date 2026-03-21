@@ -49,6 +49,7 @@ class RunConfig:
     thread_id: str
     # Allow test/local overrides without touching graph definition
     checkpointer: Any | None = None  # CheckpointerBase instance
+    artifact_store: Any | None = None  # ArtifactStoreBase instance
     metadata: dict[str, Any] = field(default_factory=dict)
 
 

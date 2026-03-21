@@ -10,6 +10,14 @@ _install_intercept()
 # ── Public API ────────────────────────────────────────────────────────────────
 
 # Configuration helper (global defaults)
+from ._artifacts import (  # noqa: E402
+    Artifact,
+    ArtifactContext,
+    ArtifactNotFoundError,
+    ArtifactStoreBase,
+    MemoryArtifactStore,
+    SqliteArtifactStore,
+)
 from ._config import OTelTracer, PostgresCheckpointer, configure  # noqa: E402
 from ._context import (  # noqa: E402
     GraphContext,
@@ -80,6 +88,7 @@ from ._multi_agent import chain, parallel, supervisor  # noqa: E402
 from .checkpointers import (  # noqa: E402
     CheckpointerBase,
     MemoryCheckpointer,
+    RedisCheckpointer,
     SqliteCheckpointer,
 )
 
@@ -108,7 +117,15 @@ __all__ = [
     "CheckpointBackendConfig",
     "CheckpointerBase",
     "MemoryCheckpointer",
+    "RedisCheckpointer",
     "SqliteCheckpointer",
+    # Artifact versioning
+    "Artifact",
+    "ArtifactContext",
+    "ArtifactNotFoundError",
+    "ArtifactStoreBase",
+    "MemoryArtifactStore",
+    "SqliteArtifactStore",
     # Tracing
     "LLMCall",
     "ToolCall",

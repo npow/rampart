@@ -12,6 +12,7 @@ def configure(
     *,
     checkpointer: Any | None = None,
     tracer: Any | None = None,
+    artifact_store: Any | None = None,
     http_proxy_port: int | None = None,
 ) -> None:
     """Configure global Rampart defaults.
@@ -22,11 +23,14 @@ def configure(
         rampart.configure(
             checkpointer=rampart.PostgresCheckpointer(os.environ["DATABASE_URL"]),
             tracer=rampart.OTelTracer(endpoint=os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"]),
+            artifact_store=rampart.SqliteArtifactStore(),
         )
 
     Args:
         checkpointer: Default checkpointer for all graphs (overridden by per-run config).
         tracer: OTel tracer that creates spans for every graph and node execution.
+        artifact_store: Default artifact store for all graphs (``MemoryArtifactStore``,
+            ``SqliteArtifactStore``, or any ``ArtifactStoreBase`` implementation).
         http_proxy_port: Local port of an HTTP/HTTPS proxy that all agent traffic is
             routed through (sets HTTP_PROXY / HTTPS_PROXY env vars so that httpx and
             requests automatically use it for newly created sessions).
@@ -37,6 +41,8 @@ def configure(
         _g.DEFAULT_CHECKPOINTER = checkpointer
     if tracer is not None:
         _g.DEFAULT_TRACER = tracer
+    if artifact_store is not None:
+        _g.DEFAULT_ARTIFACT_STORE = artifact_store
     if http_proxy_port is not None:
         _g.HTTP_PROXY_PORT = http_proxy_port
         proxy_url = f"http://localhost:{http_proxy_port}"

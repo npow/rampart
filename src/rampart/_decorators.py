@@ -95,12 +95,27 @@ class NodeDef:
         self.__name__ = fn.__name__
         self.__doc__ = fn.__doc__
 
+        # Make fn picklable for sandbox subprocess dispatch.
+        # When @node replaces the module-level name with a NodeDef, pickle can no
+        # longer find the original function by (module, qualname).  We stash it
+        # under a private mangled name so the subprocess can still unpickle it.
+        if sandbox:
+            import sys
+
+            _mod = sys.modules.get(fn.__module__)
+            if _mod is not None:
+                _private = f"_rampart_node_fn_{fn.__qualname__.replace('.', '_')}"
+                setattr(_mod, _private, fn)
+                fn.__qualname__ = _private
+                fn.__name__ = _private
+
         # Inspect parameter names at decoration time
         sig = inspect.signature(fn)
         self._params = list(sig.parameters.keys())
         self._needs_tools = "tools" in self._params
         self._needs_llm = "llm" in self._params
         self._needs_graphs = "graphs" in self._params
+        self._needs_artifacts = "artifacts" in self._params
 
     async def __call__(self, state: AgentState, **kwargs: Any) -> AgentState:
         from ._context import _run_context
@@ -212,6 +227,75 @@ class GraphDef:
         """
         checkpointer = self._resolve_checkpointer(config)
         return await checkpointer.get_history(thread_id, self.name)  # type: ignore[no-any-return]
+
+    async def get_artifact(
+        self,
+        thread_id: str,
+        name: str,
+        run_id: str | None = None,
+        store: Any | None = None,
+    ) -> Any:
+        """Return the data payload of the most-recent artifact with *name* for a thread.
+
+        Args:
+            thread_id: The conversation thread to query.
+            name: The artifact label (e.g. ``"summary"``).
+            run_id: If given, restrict to this specific run.
+            store: Artifact store to query; falls back to the global default
+                configured via ``rampart.configure(artifact_store=...)``.
+
+        Raises:
+            ``ArtifactNotFoundError`` if no matching artifact is found.
+            ``RuntimeError`` if no artifact store is configured.
+        """
+        from . import _globals
+        from ._artifacts import ArtifactNotFoundError
+
+        resolved = store or _globals.DEFAULT_ARTIFACT_STORE
+        if resolved is None:
+            raise RuntimeError(
+                "No artifact store configured. Pass artifact_store= to "
+                "rampart.configure() or supply store= directly."
+            )
+        artifact = await resolved.get(
+            thread_id=thread_id,
+            graph_name=self.name,
+            name=name,
+            run_id=run_id,
+        )
+        if artifact is None:
+            msg = f"No artifact named '{name}' for thread '{thread_id}'"
+            if run_id:
+                msg += f" run '{run_id}'"
+            raise ArtifactNotFoundError(msg)
+        return artifact.data
+
+    async def list_artifacts(
+        self,
+        thread_id: str,
+        name: str | None = None,
+        store: Any | None = None,
+    ) -> list[Any]:
+        """Return all artifacts for *thread_id*, optionally filtered by *name*.
+
+        Args:
+            thread_id: The conversation thread to query.
+            name: If given, return only artifacts with this label.
+            store: Artifact store to query; falls back to the global default.
+
+        Returns:
+            List of ``Artifact`` instances ordered by creation time (ascending).
+        """
+        from . import _globals
+
+        resolved = store or _globals.DEFAULT_ARTIFACT_STORE
+        if resolved is None:
+            return []
+        return await resolved.list(
+            thread_id=thread_id,
+            graph_name=self.name,
+            name=name,
+        )
 
     async def stream(
         self,

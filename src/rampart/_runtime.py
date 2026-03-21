@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
+from ._artifacts import ArtifactContext
 from ._context import (
     GraphContext,
     LLMContext,
@@ -64,8 +65,13 @@ async def _run_graph(
     run_id = f"run-{uuid.uuid4().hex[:8]}"
     checkpointer = graph_def._resolve_checkpointer(config)
 
-    # Resolve OTel tracer from global config
+    # Resolve OTel tracer and artifact store from global config
     from . import _globals
+
+    # Artifact store: RunConfig override first, then global default
+    artifact_store: Any | None = getattr(config, "artifact_store", None)
+    if artifact_store is None:
+        artifact_store = _globals.DEFAULT_ARTIFACT_STORE
 
     otel_tracer: Any | None = None
     if _globals.DEFAULT_TRACER is not None:
@@ -109,6 +115,7 @@ async def _run_graph(
         _budget_exceeded_handler=graph_def._budget_exceeded_handler,
         stream_queue=stream_queue,
         otel_tracer=otel_tracer,
+        artifact_store=artifact_store,
     )
 
     # Inject run metadata into state
@@ -492,6 +499,27 @@ async def _call_node_fn(
     ctx: RunContext,
 ) -> AgentState:
     """Build kwargs and call the node's original function."""
+    has_injected = node_def._needs_tools or node_def._needs_llm or node_def._needs_graphs or node_def._needs_artifacts
+
+    # Sandbox: run state-only nodes in an isolated subprocess
+    if node_def.sandbox and not has_injected:
+        from ._sandbox import run_sandboxed
+
+        return await run_sandboxed(
+            fn=node_def.fn,
+            state=state,
+            state_class=type(state),
+        )
+    elif node_def.sandbox and has_injected:
+        import warnings
+
+        warnings.warn(
+            f"Node '{node_def.name}' has sandbox=True but declares injected context "
+            f"parameters (tools/llm/graphs/artifacts). Sandbox is not supported for "
+            f"nodes with injected contexts — running in-process instead.",
+            stacklevel=4,
+        )
+
     kwargs: dict[str, Any] = {}
     if node_def._needs_tools:
         kwargs["tools"] = ToolContext(ctx)
@@ -499,6 +527,8 @@ async def _call_node_fn(
         kwargs["llm"] = LLMContext(ctx)
     if node_def._needs_graphs:
         kwargs["graphs"] = GraphContext(ctx)
+    if node_def._needs_artifacts:
+        kwargs["artifacts"] = ArtifactContext(ctx)
     result: AgentState = await node_def.fn(state, **kwargs)
     if not isinstance(result, AgentState):
         raise TypeError(

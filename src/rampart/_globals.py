@@ -6,4 +6,5 @@ from typing import Any
 
 DEFAULT_CHECKPOINTER: Any | None = None
 DEFAULT_TRACER: Any | None = None
+DEFAULT_ARTIFACT_STORE: Any | None = None
 HTTP_PROXY_PORT: int | None = None

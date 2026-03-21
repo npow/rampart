@@ -23,6 +23,7 @@ from ._models import (
 )
 
 if TYPE_CHECKING:
+    from ._artifacts import ArtifactStoreBase
     from ._models import Budget, CassetteRecord, MockContext, RunConfig
     from .checkpointers._base import CheckpointerBase
     from .testing._mock_tools import MockTool
@@ -88,6 +89,9 @@ class RunContext:
 
     # OTel tracer (opentelemetry Tracer instance, if configured)
     otel_tracer: Any | None = None
+
+    # Artifact store (optional — set via configure() or RunConfig)
+    artifact_store: ArtifactStoreBase | None = None
 
     def next_step(self) -> int:
         step = self._step_counter
@@ -212,8 +216,42 @@ class RunContext:
         # 4. Permission check
         self._check_tool_permission(tool_name, node_name)
 
-        # 5. Real tool execution
+        # 4b. Human-approval gate
         tool_def = self.tool_registry.get(tool_name)
+        if tool_def is not None and tool_def.require_human_approval:
+            from ._approval import request_approval
+            from ._models import ApprovalPolicy
+
+            policy = ApprovalPolicy(
+                delivery="webhook",
+                delivery_target=None,
+                timeout_seconds=tool_def.approval_timeout_seconds,
+                on_timeout=tool_def.approval_on_timeout,
+            )
+            approved = await request_approval(
+                tool_name=tool_name,
+                args=kwargs,
+                run_id=self.run_id,
+                thread_id=self.thread_id,
+                node_name=node_name,
+                call_id=call_id,
+                policy=policy,
+            )
+            if not approved:
+                from ._models import PermissionDeniedError, PermissionViolationEvent
+
+                event = PermissionViolationEvent(
+                    run_id=self.run_id,
+                    thread_id=self.thread_id,
+                    node_name=node_name,
+                    violation_type="tool_not_in_whitelist",
+                    attempted_action=f"human approval denied for tool '{tool_name}'",
+                    declared_scope=self.permission_scope,
+                    timestamp=datetime.utcnow(),
+                )
+                raise PermissionDeniedError(event)
+
+        # 5. Real tool execution
         if tool_def is None:
             raise KeyError(f"Tool '{tool_name}' not found in registry")
 
